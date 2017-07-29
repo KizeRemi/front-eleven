@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Front Pokemon</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <!-- === Styles Twitter Bootstrap -->
+        <!--V 3.0.1 ...-->
+        <link href="libs/vendors/bootstrap/css/bootstrap.css" rel="stylesheet">
+        <link href="libs/vendors/bootstrap/css/bootstrap-theme.css" rel="stylesheet">
+    </head>
+    <body>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Number</th>
+                    <th>Name</th>
+                </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+        <form id="form-new-pokemon">
+            <div><input name="number" type="integer" placeholder="Numero Pokedex"/></div>
+            <div><input name="name" type="text" placeholder="Nom"/></div>
+            <div><input name="description" type="textarea" placeholder="Description du pokemon"/></div>
+            <button class="btn" type="submit" value="Go">Enregistrer</button>
+        </form>
+        <div id="pokemon-view">
+        </div>
+    </body>
+    
+    <script src="libs/vendors/jquery.js"></script>
+    <script src="libs/vendors/underscore.js"></script>
+    <script src="libs/vendors/backbone.js"></script>
+
+    <script type="text/template" id="pokemon-table-template">
+        <td><%= number %></td>
+        <td><%= name %></td>
+        
+    </script>
+    <script type="text/template" id="pokemon-template">
+        <div><%= number %></div>
+        <div><%= name %></div>
+        <div><%= description %></div>
+    </script>
+    <script>
+
+    var Pokemon = Backbone.Model.extend({
+        url: function(){
+            return 'http://localhost:8888/api-eleven/web/pokemon/'+this.id
+        }
+    });
+    var PokemonCollection = Backbone.Collection.extend({
+        initialize: function(){
+        },
+        url: 'http://localhost:8888/api-eleven/web/pokemon'
+    });
+
+    var pokemons = new PokemonCollection();
+
+    var PokemonView = Backbone.View.extend({
+        tagName: 'tr',
+        template: _.template($('#pokemon-table-template').html()),
+        events: { 
+            "click" : "displayPokemon"
+        },
+        render: function() {
+            this.$el.html(this.template(this.model.attributes));
+            return this;
+        },
+        attributes: function() {
+            return {"data-id": this.model.id }
+        },
+        displayPokemon: function (evt){
+            var currentPokemon = new Pokemon({ id: this.model.id })
+            currentPokemon.fetch({
+                success: function (model, response, options) {
+                    var currentPokemonView = new CurrentPokemonView({
+                            model: model
+                    });
+                    currentPokemonView.render().$el;
+                }
+            });
+        }
+    });
+
+    var CurrentPokemonView = Backbone.View.extend({
+        el: '#pokemon-view',
+        template: _.template($('#pokemon-template').html()),
+        render: function() {
+            this.$el.html('');
+            this.$el.html(this.template(this.model.attributes));
+            return this;
+        }
+    });
+
+    var PokemonsView = Backbone.View.extend({
+        el: '#table-body',
+        initialize: function() {
+            this.listenTo(pokemons, 'add', this.addOne);
+            this.render();
+        },
+        render: function() {
+            this.$el.html('');
+            pokemons.each(function(model) {
+                console.log(model);
+                var pokemon = new PokemonView({
+                    model: model
+                });
+                this.$el.append(pokemon.render().el);
+            }.bind(this));
+            return this;
+        },
+        addOne: function (pokemon) {
+            var pokemon = new PokemonView({
+                model: pokemon
+            });
+            this.$el.append(pokemon.render().el);
+        }
+    });
+
+    pokemons.fetch({
+        success: function (collection, response, options) {
+            var app = new PokemonsView;
+
+        }
+    });
+
+
+    var FormView = Backbone.View.extend({
+        el: "#form-new-pokemon",
+        initialize: function() {
+            this.render();
+        },
+        events: {
+            "click button" : "save"
+        },
+
+        save: function (e) {
+            e.preventDefault();
+            var number = this.$('input[name=number]').val();
+            var name = this.$('input[name=name]').val();
+            var description = this.$('input[name=description]').val();
+            pokemons.create({
+                name: name,
+                number: number,
+                description: description
+            });
+        }
+    });
+    var test = new FormView;
+    </script>
+
+</html>
