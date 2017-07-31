@@ -20,6 +20,7 @@
           </thead>
           <tbody id="table-body"></tbody>
         </table>
+        <div 
         <form id="form-new-pokemon">
             <div><input name="number" type="integer" placeholder="Numero Pokedex"/></div>
             <div><input name="name" type="text" placeholder="Nom"/></div>
@@ -33,7 +34,6 @@
     <script src="libs/vendors/jquery.js"></script>
     <script src="libs/vendors/underscore.js"></script>
     <script src="libs/vendors/backbone.js"></script>
-
     <script type="text/template" id="pokemon-table-template">
         <td><%= number %></td>
         <td><%= name %></td>
@@ -146,6 +146,12 @@
                 name: name,
                 number: number,
                 description: description
+            },{ 
+                success: function(model){
+                },
+                error: function(model, xhr, options){
+                    console.log(xhr.responseText);
+                }
             });
         }
     });
